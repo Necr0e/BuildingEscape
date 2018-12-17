@@ -3,15 +3,14 @@
 #include "OpenDoor.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#include "Components/PrimitiveComponent.h"
 
-// Sets default values for this component's properties
+#define OUT
+
 UOpenDoor::UOpenDoor()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
 }
 
 
@@ -20,9 +19,7 @@ void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ActorThatOpensDoor = GetWorld()->GetFirstPlayerController()->GetPawn();
 	DoorOwner = GetOwner();
-	
 }
 
 // Called every frame
@@ -30,17 +27,10 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (PressurePlate->IsOverlappingActor(ActorThatOpensDoor))
+	if (GetTotalMassOnPressurePlate() > 50.0f)
 	{
-		if (!bIsDoorOpen)
-		{
-			OpenDoor();
-		}
-		else
-		{
-			CloseDoor();
-		}
-		LastDoorOpenTime = GetWorld()->GetRealTimeSeconds();
+		OpenDoor();
+		LastDoorOpenTime = GetWorld()->GetTimeSeconds();
 	}
 
 	if (GetWorld()->GetTimeSeconds() - LastDoorOpenTime > DoorCloseDelay)
@@ -52,13 +42,25 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 void UOpenDoor::OpenDoor()
 {
 	DoorOwner->SetActorRotation(FRotator(0.0f, OpenAngle, 0.0f));
-	bIsDoorOpen = true;
 }
 
 void UOpenDoor::CloseDoor()
 {
-	DoorOwner->SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
-	bIsDoorOpen = false;
+	DoorOwner->SetActorRotation(FRotator(0.0f, -90.0f, 0.0f));
+}
+
+float UOpenDoor::GetTotalMassOnPressurePlate()
+{
+	TArray<AActor*> OverlappingActors;
+	PressurePlate->GetOverlappingActors(OUT OverlappingActors);
+	float TotalMass = 0.0f;
+
+	for (auto* Actor : OverlappingActors)
+	{
+		TotalMass += Actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+	}
+
+	return TotalMass;
 }
 
 
