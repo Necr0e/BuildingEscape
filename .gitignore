@@ -74,4 +74,6 @@ Plugins/*/Intermediate/*
 DerivedDataCache/*
 
 # Game Specific
-Content/StarterContent/*
+Content/StarterContent/Textures/*
+Content/StarterContent/HDRI/*
+

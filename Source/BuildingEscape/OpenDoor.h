@@ -43,4 +43,5 @@ private:
 	float LastDoorOpenTime;
 
 	AActor* DoorOwner;
+	bool bIsDoorOpen = false;
 };
