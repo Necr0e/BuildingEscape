@@ -13,12 +13,19 @@ UOpenDoor::UOpenDoor()
 
 }
 
-
-// Called when the game starts
 void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
+	if (!DoorOwner)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Door Owner not intialized!"))
+		return;
+	}
 
+	if (!PressurePlate)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Pressure Plate not intialized!"))
+	}
 	DoorOwner = GetOwner();
 }
 
@@ -27,33 +34,23 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (GetTotalMassOnPressurePlate() > 50.0f)
+	if (GetTotalMassOnPressurePlate() > TriggerMass)
 	{
-		OpenDoor();
-		LastDoorOpenTime = GetWorld()->GetTimeSeconds();
+		OnOpenRequest.Broadcast();
 	}
-
-	if (GetWorld()->GetTimeSeconds() - LastDoorOpenTime > DoorCloseDelay)
-	{
-		CloseDoor();
+	else
+	{ 
+		OnCloseRequest.Broadcast();
 	}
-}
-
-void UOpenDoor::OpenDoor()
-{
-	DoorOwner->SetActorRotation(FRotator(0.0f, OpenAngle, 0.0f));
-}
-
-void UOpenDoor::CloseDoor()
-{
-	DoorOwner->SetActorRotation(FRotator(0.0f, -90.0f, 0.0f));
 }
 
 float UOpenDoor::GetTotalMassOnPressurePlate()
 {
-	TArray<AActor*> OverlappingActors;
-	PressurePlate->GetOverlappingActors(OUT OverlappingActors);
 	float TotalMass = 0.0f;
+
+	TArray<AActor*> OverlappingActors;
+	if (!PressurePlate) { return TotalMass; }
+	PressurePlate->GetOverlappingActors(OUT OverlappingActors);
 
 	for (auto* Actor : OverlappingActors)
 	{
@@ -62,6 +59,3 @@ float UOpenDoor::GetTotalMassOnPressurePlate()
 
 	return TotalMass;
 }
-
-
-
